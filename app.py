@@ -7,7 +7,7 @@ from fsm import Inc_exp, Ammount, Editcater, Semsum, Update, Edbudget, Month_sta
 from keyboards import menu_kb, back_to_menu, back_to_menu_keyboard, start_menu_kb, inex_category, add_remove_keyboard, \
     edit_budget_category, previous_month_keyboard, previous_and_next_month_keyboard, upd_keyboard
 import psycopg2
-from config import DB_USER, DB_PORT, DB_PASS, DB_NAME, DB_HOST, TOKEN, WEBHOOK_URL_PATH
+from config import DB_USER, DB_PORT, DB_PASS, DB_NAME, DB_HOST, TOKEN, WEBHOOK_URL_PATH, WEBHOOK_HOST
 from bs4 import BeautifulSoup
 import requests
 import time
@@ -335,7 +335,7 @@ async def send_welcome(message: Message, state: FSMContext):
 
 
 @dp.message_handler(commands='exchange_rate', state='*')
-async def ed_budg(message: Message, state: FSMContext):
+async def ed_budg_start(message: Message, state: FSMContext):
     await state.reset_state(with_data=True)  # Reset data in storage
     try:
 
@@ -371,14 +371,14 @@ async def edit_buttons(message: Message, state: FSMContext):
 
 
 @dp.message_handler(commands=['update'], state='*')
-async def send_welcome(message: Message, state: FSMContext):
+async def send_welcome2(message: Message, state: FSMContext):
     await state.reset_state(with_data=True)  # Reset data in storage
     await Update.Updater.set()
     await message.answer('Enter new balance', reply_markup=back_to_menu_keyboard)
 
 
 @dp.message_handler(state=Update.Updater)
-async def send_welcome(message: Message, state=FSMContext):
+async def send_welcome2(message: Message, state=FSMContext):
     try:
         ammount = round(float(message.text), 2)
         query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
@@ -401,7 +401,7 @@ async def enter_ammount(message: Message):
 
 
 @dp.message_handler(state=Ammount.Ammount_cur)
-async def enter_ammount_sum(message: Message, state: FSMContext):
+async def enter_ammount_sum_end(message: Message, state: FSMContext):
     try:
         ammount = round(float(message.text), 2)
         query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
@@ -425,7 +425,7 @@ async def income(message: Message, state: FSMContext):
 
 
 @dp.message_handler(text='Expencese', state=None)
-async def income(message: Message, state: FSMContext):
+async def expenc(message: Message, state: FSMContext):
     await message.answer('Enter sum', reply_markup=back_to_menu_keyboard)
     await Inc_exp.Inex1.set()  # Set fsm into first state
     await state.update_data(exin='expencese')  # Saving expencese as parameter to filter categories by it
