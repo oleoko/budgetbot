@@ -21,8 +21,8 @@ remove_commands = [f'remove{x}' for x in range(1000)]
 delete_commands = [f'delete{x}' for x in range(1000)]
 upd_comment = [f'upd_comment{x}' for x in range(1000)]
 
-regexp = r'^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?' \
-         r'\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]' \
+regexp = r'^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?'\
+         r'\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]'\
          r'|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?' \
          r'd{2})$'
 
@@ -165,7 +165,8 @@ def statistic(message, month, year):
     sorted_by_sum = sorted(categ_sum, key=lambda tup: tup[0], reverse=True)
     for sum_cat in sorted_by_sum:
         text_in += f'{sum_cat[1]}: {sum_cat[0]}\n'
-    result = f'Statistic for {calendar[month]} {year}:\n\nMonthly expenceses:\nTotal: {total_ex}\n{text_ex}\nMonthly incomes:\nTotal: {total_in}\n{text_in}'
+    result = f'Statistic for {calendar[month]} {year}:\n\nMonthly expenceses:\nTotal' \
+             f': {total_ex}\n{text_ex}\nMonthly incomes:\nTotal: {total_in}\n{text_in}'
     conn.close()
     return result
 
@@ -292,10 +293,13 @@ async def enter_ammount_sum(message: Message, state: FSMContext):
 async def send_welcome(message: Message, state: FSMContext):
     await state.reset_state(with_data=True)  # Reset data in storage
     await message.answer(
-        'Hello!\nI am your budget bot\n\nClick on button "Enter current balance" and enter your amount\nYou can also update your amount later using command /update'
-        '\n\nClick "expencese" or "income" button, enter sum and choose category to save your transaction. You can enter sum directly, without clicking on buttons,'
-        ' it will direct you to expencese categories. You can add comment to your transaction entering it after sum in format: "sum comment" \n\nUse commands:\n/edit_categories to add or remove your categories\n/edit_budget to delete your transactions',
-        reply_markup=start_menu_kb)
+        'Hello!\nI am your budget bot\n\nClick on button "Enter current balance" and enter your amount\nYou can also'
+        ' update your amount later using command /update'
+        '\n\nClick "expencese" or "income" button, enter sum and choose category to save your transaction. '
+        'You can enter sum directly, without clicking on buttons,'
+        ' it will direct you to expencese categories. You can add comment to your transaction entering it after sum'
+        ' in format: "sum comment" \n\nUse commands:\n/edit_categories to add or remove your categories\n'
+        '/edit_budget to delete your transactions', reply_markup=start_menu_kb)
     db_connect()
     user = [message.from_user.id]
     query_check_if_user_in_db = """SELECT ID FROM indicator WHERE ID = (%s);"""
