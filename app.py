@@ -410,7 +410,7 @@ async def enter_ammount_sum_end(message: Message, state: FSMContext):
         cur.execute(query_add_ammount, ammount_data)
         conn.close()
         await state.reset_state(with_data=True)  # Reset state
-        await message.answer(f'Your ammont updated.\nCurrent ammount:\n{message.text}',reply_markup=menu_kb)
+        await message.answer(f'Your ammont updated.\nCurrent ammount:\n{message.text}', reply_markup=menu_kb)
     except ValueError:
         await message.answer('Incorrect value. Try again', reply_markup=back_to_menu)
 
@@ -697,7 +697,7 @@ async def semsum(message: Message, state: FSMContext):
         rows = list(cur)
         conn.close()
         for category in rows:  # Generating user categories
-            #    choose_cat_kb = choose_cat_kb.add(KeyboardButton(f'{category[0]}'))  # Add buttons to ReplyKeyboardMarkup
+            choose_cat_kb = choose_cat_kb.add(KeyboardButton(f'{category[0]}'))  # Add buttons to ReplyKeyboardMarkup
             categories_list.append(category[0])  # Saving categories to filter message when one is choosen
         pairs = len(categories_list) // 2
         ostatok = len(categories_list) % 2
@@ -936,7 +936,7 @@ async def delete(message: Message, state: FSMContext):
     date = data.get('day_month_year')
     day_history(message, date[0], date[1], date[2])
     try:
-        suma, cat,  = float(data_to_delete[indicator][0]), data_to_delete[indicator][1]
+        suma, cat = float(data_to_delete[indicator][0]), data_to_delete[indicator][1]
         inex, data = data_to_delete[indicator][2], data_to_delete[indicator][4]
         if suma % 1 == 0:
             suma = int(suma)
