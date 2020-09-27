@@ -378,7 +378,7 @@ async def send_welcome2(message: Message, state: FSMContext):
 
 
 @dp.message_handler(state=Update.Updater)
-async def send_welcome2(message: Message, state=FSMContext):
+async def send_welcome3(message: Message, state=FSMContext):
     try:
         ammount = round(float(message.text), 2)
         query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
@@ -409,8 +409,8 @@ async def enter_ammount_sum_end(message: Message, state: FSMContext):
         db_connect()
         cur.execute(query_add_ammount, ammount_data)
         conn.close()
-        await state.reset_state(
-            with_data=True)  # Reset state            await message.answer(f'Your ammont updated.\nCurrent ammount:\n{message.text}',reply_markup=menu_kb)
+        await state.reset_state(with_data=True)  # Reset state
+        await message.answer(f'Your ammont updated.\nCurrent ammount:\n{message.text}',reply_markup=menu_kb)
     except ValueError:
         await message.answer('Incorrect value. Try again', reply_markup=back_to_menu)
 
@@ -508,7 +508,7 @@ async def choose_cat(message: Message, state=FSMContext):
 
 
 @dp.message_handler(state=Inc_exp.Inex3)
-async def choose_cat(message: Message, state=FSMContext):
+async def choose_cat_inex3(message: Message, state=FSMContext):
     print(len(message.text))
     if len(message.text) > 299:
         await message.answer('Value too long', reply_markup=back_to_menu_keyboard)
@@ -627,7 +627,7 @@ async def previous_month(message: Message, state: FSMContext):
 
 
 @dp.message_handler(text='Previous month', state=Month_stat.Month_stat1)
-async def previous_month(message: Message, state: FSMContext):
+async def previous_month1(message: Message, state: FSMContext):
     # Get data about next month
     data = await state.get_data()
     next_month = int(data.get('month'))
@@ -649,7 +649,7 @@ async def previous_month(message: Message, state: FSMContext):
 
 
 @dp.message_handler(text='Next month', state=Month_stat.Month_stat1)
-async def previous_month(message: Message, state: FSMContext):
+async def previous_month3(message: Message, state: FSMContext):
     # Get data about previous month
     data = await state.get_data()
     pre_month = int(data.get('month'))
@@ -674,11 +674,9 @@ async def previous_month(message: Message, state: FSMContext):
 
     await message.answer(stat, reply_markup=keyboard)
 
-    # Semsum
-
 
 @dp.message_handler(regexp=r'\A\d', state=None)
-async def show_stat(message: Message, state: FSMContext):
+async def semsum(message: Message, state: FSMContext):
     try:
         spl = message.text.split(' ')
         number = round(float(spl[0]), 2)
@@ -753,7 +751,7 @@ async def ch_cat(message: Message, state: FSMContext):
 
 
 @dp.message_handler(state=Semsum.Kateg2)
-async def choose_cat(message: Message, state=FSMContext):
+async def insert_data(message: Message, state=FSMContext):
     if len(message.text) > 299:
         await message.answer('Value too long', reply_markup=back_to_menu_keyboard)
     else:
@@ -849,7 +847,7 @@ async def rem_cat1(message: Message):
 
 
 @dp.message_handler(commands=remove_commands, state=[Editcater.Edit4, Editcater.Edit1])
-async def rem_cat1(message: Message):
+async def rem_cat2(message: Message):
     indicator = int(message.text[7:])
     try:
         category_to_delete = dictionary[indicator]
@@ -938,8 +936,8 @@ async def delete(message: Message, state: FSMContext):
     date = data.get('day_month_year')
     day_history(message, date[0], date[1], date[2])
     try:
-        suma, cat, inex, data = float(data_to_delete[indicator][0]), data_to_delete[indicator][1], \
-                                data_to_delete[indicator][2], data_to_delete[indicator][4]
+        suma, cat,  = float(data_to_delete[indicator][0]), data_to_delete[indicator][1]
+        inex, data = data_to_delete[indicator][2], data_to_delete[indicator][4]
         if suma % 1 == 0:
             suma = int(suma)
         print(cat)
@@ -982,7 +980,7 @@ async def edit_comment(message: Message, state: FSMContext):
     db_connect()
     cur.execute(query_update_comment, parameters)
     conn.close()
-    await message.answer(f'Comment deleted\nYou are in edit budget menu', reply_markup=edit_budget_category)
+    await message.answer('Comment deleted\nYou are in edit budget menu', reply_markup=edit_budget_category)
     await state.reset_state(with_data=True)  # Reset data in storage
     await Edbudget.Edbudget1.set()
 
@@ -998,9 +996,8 @@ async def type_commen(message: Message, state: FSMContext):
         print(date, indicator)
         day_history(message, date[0], date[1], date[2])
         try:
-            suma, cat, inex, data = float(data_to_delete[indicator][0]), data_to_delete[indicator][1], \
-                                   data_to_delete[indicator][2], data_to_delete[indicator][4]
-
+            suma, cat = float(data_to_delete[indicator][0]), data_to_delete[indicator][1]
+            inex, data = data_to_delete[indicator][2], data_to_delete[indicator][4]
             query_update_comment = """UPDATE BUDGET SET COMMENT=%s WHERE ID=%s AND SUM=%s AND CATEGORY=%s AND IN_EX=%s AND DATE=%s"""
             parameters = [message.text, message.from_user.id, suma, cat, inex, data]
             db_connect()
