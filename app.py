@@ -7,7 +7,7 @@ from fsm import Inc_exp, Ammount, Editcater, Semsum, Update, Edbudget, Month_sta
 from keyboards import menu_kb, back_to_menu, back_to_menu_keyboard, start_menu_kb, inex_category, add_remove_keyboard, \
     edit_budget_category, previous_month_keyboard, previous_and_next_month_keyboard, upd_keyboard
 import psycopg2
-from config import DB_USER, DB_PORT, DB_PASS, DB_NAME, DB_HOST, TOKEN
+from config import DB_USER, DB_PORT, DB_PASS, DB_NAME, DB_HOST, TOKEN, WEBHOOK_URL_PATH
 from bs4 import BeautifulSoup
 import requests
 import time
@@ -881,13 +881,13 @@ async def choose_day(message: Message, state: FSMContext):
 
 @dp.message_handler(text=['Another day'],
                     state=[Edbudget.Edbudget1, Edbudget.Edbudget2, Edbudget.Edbudget3, Edbudget.Edbudget4])
-async def choose_day(message: Message):
+async def choose_d(message: Message):
     await message.answer('Enter day in format dd.mm.yyyy', reply_markup=back_to_menu_keyboard)
     await Edbudget.Edbudget3.set()
 
 
 @dp.message_handler(regexp=regexp, state=[Edbudget.Edbudget3, Edbudget.Edbudget4])
-async def choose_daysd(message: Message, state: FSMContext):
+async def choose_day2(message: Message, state: FSMContext):
     try:
         date = message.text.split('.')
         dayz, monthz, yearz = int(date[0]), int(date[1]), int(date[2])
@@ -900,7 +900,7 @@ async def choose_daysd(message: Message, state: FSMContext):
 
 
 @dp.message_handler(commands=delete_commands, state=Edbudget.Edbudget2)
-async def choose_day(message: Message, state: FSMContext):
+async def choose_day3(message: Message, state: FSMContext):
     indicator = int(message.text[7:])
     data = await state.get_data()
     date = data.get('date')
@@ -932,7 +932,7 @@ async def choose_day(message: Message, state: FSMContext):
 
 
 @dp.message_handler(commands=delete_commands, state=Edbudget.Edbudget4)
-async def choose_day(message: Message, state: FSMContext):
+async def delete(message: Message, state: FSMContext):
     indicator = int(message.text[7:])
     data = await state.get_data()
     date = data.get('day_month_year')
@@ -969,16 +969,16 @@ async def type_comment(message: Message, state: FSMContext):
 
 
 @dp.message_handler(text='Delete comment', state=Edbudget.Edbudget5)
-async def type_comment(message: Message, state: FSMContext):
+async def edit_comment(message: Message, state: FSMContext):
     data = await state.get_data()
     date = data.get('day_month_year')
     indicator = int(data.get('commentind'))
     print(date, indicator)
     day_history(message, date[0], date[1], date[2])
-    suma, cat, inex, data = float(data_to_delete[indicator][0]), data_to_delete[indicator][1],\
-                            data_to_delete[indicator][2], data_to_delete[indicator][4]
+    suma, cat = float(data_to_delete[indicator][0]), data_to_delete[indicator][1]
+    inex, data = data_to_delete[indicator][2], data_to_delete[indicator][4]
     query_update_comment = """UPDATE BUDGET SET COMMENT=%s WHERE ID=%s AND SUM=%s AND CATEGORY=%s AND IN_EX=%s AND DATE=%s"""
-    parameters = ['', message.from_user.id, sum, cat, inex, data]
+    parameters = ['', message.from_user.id, suma, cat, inex, data]
     db_connect()
     cur.execute(query_update_comment, parameters)
     conn.close()
@@ -988,7 +988,7 @@ async def type_comment(message: Message, state: FSMContext):
 
 
 @dp.message_handler(state=Edbudget.Edbudget5)
-async def type_comment(message: Message, state: FSMContext):
+async def type_commen(message: Message, state: FSMContext):
     if len(message.text) > 299:
         await message.answer('Value too long', reply_markup=back_to_menu_keyboard)
     else:
@@ -1006,7 +1006,7 @@ async def type_comment(message: Message, state: FSMContext):
             db_connect()
             cur.execute(query_update_comment, parameters)
             conn.close()
-            await message.answer(f'Comment added\nYou are in edit budget menu', reply_markup=edit_budget_category)
+            await message.answer('Comment added\nYou are in edit budget menu', reply_markup=edit_budget_category)
             await state.reset_state(with_data=True)  # Reset data in storage
             await Edbudget.Edbudget1.set()
         except (KeyError, UnboundLocalError):
