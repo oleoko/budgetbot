@@ -3,17 +3,16 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import Message, ReplyKeyboardRemove
+from get_rate_function import get_rate
 from fsm import Inc_exp, amount, Editcater, Semsum, Update, Edbudget, Month_stat
 from keyboards import menu_kb, back_to_menu, back_to_menu_keyboard, start_menu_kb, inex_category, add_remove_keyboard, \
     edit_budget_category, previous_month_keyboard, previous_and_next_month_keyboard, upd_keyboard
 import psycopg2
 from config_example import DB_USER, DB_PORT, DB_PASS, DB_NAME, DB_HOST, TOKEN, WEBHOOK_URL_PATH, WEBHOOK_HOST
-from bs4 import BeautifulSoup
-import requests
-import time
 from urllib.parse import urljoin
 from aiogram.utils.executor import start_webhook
 import os
+
 
 WEBHOOK_URL = urljoin(WEBHOOK_HOST, WEBHOOK_URL_PATH)
 
@@ -342,18 +341,7 @@ async def send_welcome(message: Message, state: FSMContext):
 async def ed_budg_start(message: Message, state: FSMContext):
     await state.reset_state(with_data=True)  # Reset data in storage
     try:
-
-        page = 'https://bank.gov.ua/'
-        request = requests.get(page)
-        time.sleep(0.01)
-        soup = BeautifulSoup(request.text, "html.parser")
-        rates = []
-
-        mydivs = soup.findAll("div", {"class": "value-full"})
-        for i in mydivs:
-            stri = str(i.contents[1])
-            rate = round(float(stri.split("<")[1].split('>')[1].split(' ')[0].replace(',', '.')), 4)
-            rates.append(rate)
+        get_rate()
         await message.answer(f'Exchange rate:\n1 EUR = {rates[0]}\n1 USD = {rates[1]}', reply_markup=menu_kb)
     except IndexError:
         await message.answer("For some reason we can't get exchange rate now\nPlease contact with https://t.me/oleoko",
