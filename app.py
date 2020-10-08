@@ -3,11 +3,11 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from aiogram.types import Message, ReplyKeyboardRemove
-from fsm import Inc_exp, Ammount, Editcater, Semsum, Update, Edbudget, Month_stat
+from fsm import Inc_exp, amount, Editcater, Semsum, Update, Edbudget, Month_stat
 from keyboards import menu_kb, back_to_menu, back_to_menu_keyboard, start_menu_kb, inex_category, add_remove_keyboard, \
     edit_budget_category, previous_month_keyboard, previous_and_next_month_keyboard, upd_keyboard
 import psycopg2
-from config import DB_USER, DB_PORT, DB_PASS, DB_NAME, DB_HOST, TOKEN, WEBHOOK_URL_PATH, WEBHOOK_HOST
+from config_example import DB_USER, DB_PORT, DB_PASS, DB_NAME, DB_HOST, TOKEN, WEBHOOK_URL_PATH, WEBHOOK_HOST
 from bs4 import BeautifulSoup
 import requests
 import time
@@ -43,37 +43,37 @@ def db_connect():
     cur = conn.cursor()
 
 
-def curent_ammount(message):
+def curent_amount(message):
     # Get amount
-    query_get_ammount = """SELECT ID,SUM,DATE FROM AMMOUNT WHERE ID=(%s);"""
+    query_get_amount = """SELECT ID,SUM,DATE FROM amount WHERE ID=(%s);"""
     user = message.from_user.id
-    cur.execute(query_get_ammount, [user])
+    cur.execute(query_get_amount, [user])
     rows = cur.fetchall()
     for data in rows:
-        user_ammount_data = data  # Get user ammount data
-    last_added_ammount = user_ammount_data[1]  # Ammount sum
-    date_ammount_added = user_ammount_data[2]  # Date ammount was added
+        user_amount_data = data  # Get user amount data
+    last_added_amount = user_amount_data[1]  # amount sum
+    date_amount_added = user_amount_data[2]  # Date amount was added
 
-    # sum all expenceses after last ammount update
+    # sum all expenceses after last amount update
     query_select_expenceses = """SELECT SUM FROM BUDGET WHERE DATE>%s AND IN_EX=%s AND ID=%s;"""
-    parameters_exp_query = [date_ammount_added, 'expencese', message.from_user.id]
+    parameters_exp_query = [date_amount_added, 'expencese', message.from_user.id]
     cur.execute(query_select_expenceses, parameters_exp_query)
     rows = cur.fetchall()
     expenceses = 0
     for i in rows:
         expenceses -= round(float(i[0]), 2)
 
-    # sum all incomes after last ammount update
+    # sum all incomes after last amount update
     query_select_incomes = """SELECT SUM FROM BUDGET WHERE DATE>%s AND IN_EX=%s AND ID=%s;"""
-    parameters_exp_query = [date_ammount_added, 'income', message.from_user.id]
+    parameters_exp_query = [date_amount_added, 'income', message.from_user.id]
     cur.execute(query_select_incomes, parameters_exp_query)
     rows = cur.fetchall()
     incomes = 0
     for i in rows:
         incomes += round(float(i[0]), 2)
 
-    # Counting current ammount
-    curent_amount = round(float(last_added_ammount), 2) + expenceses + incomes
+    # Counting current amount
+    curent_amount = round(float(last_added_amount), 2) + expenceses + incomes
     if curent_amount % 1 == 0:
         curent_amount = int(curent_amount)
     else:
@@ -283,7 +283,7 @@ def day_history(message, day, month, year):
 
 
 @dp.message_handler(text='⬅️Back to menu', state='*')
-async def enter_ammount_sum(message: Message, state: FSMContext):
+async def enter_amount_sum(message: Message, state: FSMContext):
     await message.answer('Main menu', reply_markup=menu_kb)
     await state.reset_state(with_data=True)  # Reset data in storage
 
@@ -323,18 +323,18 @@ async def send_welcome(message: Message, state: FSMContext):
             cur.execute(query_add_basic_categories, data)
         query_add_to_users = """INSERT INTO indicator (ID) VALUES (%s);"""
         cur.execute(query_add_to_users, user)
-    query_check_if_ammount = """SELECT ID FROM AMMOUNT WHERE ID = (%s);"""
-    cur.execute(query_check_if_ammount, user)
+    query_check_if_amount = """SELECT ID FROM amount WHERE ID = (%s);"""
+    cur.execute(query_check_if_amount, user)
     rows = cur.fetchall()
     users = []
     for us_id in rows:
         users.append(us_id[0])
-    if message.from_user.id in users:  # Check if user already have ammount. If not - add basic categories
+    if message.from_user.id in users:  # Check if user already have amount. If not - add basic categories
         pass
     else:
-        query_add_null_ammount = """INSERT INTO AMMOUNT (ID,SUM,DATE) VALUES(%s,%s,%s);"""
-        ammount_null_data = [message.from_user.id, 0, message.date]
-        cur.execute(query_add_null_ammount, ammount_null_data)
+        query_add_null_amount = """INSERT INTO amount (ID,SUM,DATE) VALUES(%s,%s,%s);"""
+        amount_null_data = [message.from_user.id, 0, message.date]
+        cur.execute(query_add_null_amount, amount_null_data)
     conn.close()
 
 
@@ -384,14 +384,14 @@ async def send_welcome2(message: Message, state: FSMContext):
 @dp.message_handler(state=Update.Updater)
 async def send_welcome3(message: Message, state=FSMContext):
     try:
-        ammount = round(float(message.text), 2)
-        query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
-        ammount_data = [ammount, message.date, message.from_user.id]
+        amount = round(float(message.text), 2)
+        query_add_amount = """UPDATE amount SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
+        amount_data = [amount, message.date, message.from_user.id]
         db_connect()
-        cur.execute(query_add_ammount, ammount_data)
+        cur.execute(query_add_amount, amount_data)
         conn.close()
         await state.reset_state(with_data=True)  # Reset state
-        await message.answer(f'Your ammont updated.\nCurrent amount:\n{message.text}', reply_markup=menu_kb)
+        await message.answer(f'Your amount updated.\nCurrent amount:\n{message.text}', reply_markup=menu_kb)
     except ValueError:
         await message.answer('Incorrect value. Try again', reply_markup=back_to_menu)
 
@@ -399,22 +399,22 @@ async def send_welcome3(message: Message, state=FSMContext):
 
 
 @dp.message_handler(text='Enter current balance', state=None)
-async def enter_ammount(message: Message):
+async def enter_amount(message: Message):
     await message.answer('Enter balance sum', reply_markup=back_to_menu_keyboard)
-    await Ammount.Ammount_cur.set()
+    await Amount.Amount_cur.set()
 
 
-@dp.message_handler(state=Ammount.Ammount_cur)
-async def enter_ammount_sum_end(message: Message, state: FSMContext):
+@dp.message_handler(state=Amount.Amount_cur)
+async def enter_amount_sum_end(message: Message, state: FSMContext):
     try:
-        ammount = round(float(message.text), 2)
-        query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
-        ammount_data = [ammount, message.date, message.from_user.id]
+        amount = round(float(message.text), 2)
+        query_add_amount = """UPDATE amount SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
+        amount_data = [amount, message.date, message.from_user.id]
         db_connect()
-        cur.execute(query_add_ammount, ammount_data)
+        cur.execute(query_add_amount, amount_data)
         conn.close()
         await state.reset_state(with_data=True)  # Reset state
-        await message.answer(f'Your ammont updated.\nCurrent ammount:\n{message.text}', reply_markup=menu_kb)
+        await message.answer(f'Your ammont updated.\nCurrent amount:\n{message.text}', reply_markup=menu_kb)
     except ValueError:
         await message.answer('Incorrect value. Try again', reply_markup=back_to_menu)
 
@@ -501,11 +501,11 @@ async def choose_cat(message: Message, state=FSMContext):
             else:
                 cur.execute(query_add_sum_in_category_with_com, data_to_insert_with_com)
                 await state.reset_state(with_data=True)  # Reset state and data in storage
-            cura = curent_ammount(message)
+            cura = curent_amount(message)
             await message.answer(f'{added_sum} added to category {choosen_cat}\nBalance: {cura}', reply_markup=menu_kb)
-            query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
-            ammount_data = [cura, message.date, message.from_user.id]
-            cur.execute(query_add_ammount, ammount_data)
+            query_add_amount = """UPDATE amount SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
+            amount_data = [cura, message.date, message.from_user.id]
+            cur.execute(query_add_amount, amount_data)
         else:
             await message.answer('Not added. Please chose valid category from buttons below')
         conn.close()
@@ -542,11 +542,11 @@ async def choose_cat_inex3(message: Message, state=FSMContext):
             cur.execute(query_add_sum_in_category, data_to_insert)
         else:
             cur.execute(query_add_sum_in_category_with_comment, data_to_insert_with_com)
-        cura = curent_ammount(message)
+        cura = curent_amount(message)
         await message.answer(f'{added_sum} added to category {choosen_cat}\nBalance: {cura}', reply_markup=menu_kb)
-        query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
-        ammount_data = [cura, message.date, message.from_user.id]
-        cur.execute(query_add_ammount, ammount_data)
+        query_add_amount = """UPDATE amount SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
+        amount_data = [cura, message.date, message.from_user.id]
+        cur.execute(query_add_amount, amount_data)
         await state.reset_state(with_data=True)  # Reset state and data in storage
         conn.close()
 
@@ -556,7 +556,7 @@ async def choose_cat_inex3(message: Message, state=FSMContext):
 @dp.message_handler(text='Statistics', state=None)
 async def show_stat(message: Message, state: FSMContext):
     db_connect()
-    cura = curent_ammount(message)
+    cura = curent_amount(message)
     stat = statistic(message, message.date.month, message.date.year)
     await message.answer(f'Balance: {cura}\n{stat}', reply_markup=previous_month_keyboard)
     await state.update_data(curent_month=message.date.month)
@@ -744,11 +744,11 @@ async def ch_cat(message: Message, state: FSMContext):
             else:
                 cur.execute(query_add_sum_in_category_with_comment, data_to_insert_with_com)
                 await state.reset_state(with_data=True)  # Reset state and data in storage
-            cura = curent_ammount(message)
+            cura = curent_amount(message)
             await message.answer(f'{added_sum} added to category {choosen_cat}\nBalance: {cura}', reply_markup=menu_kb)
-            query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
-            ammount_data = [cura, message.date, message.from_user.id]
-            cur.execute(query_add_ammount, ammount_data)
+            query_add_amount = """UPDATE amount SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
+            amount_data = [cura, message.date, message.from_user.id]
+            cur.execute(query_add_amount, amount_data)
         else:
             await message.answer('Not added. Please chose valid category from buttons below')
         conn.close()
@@ -786,11 +786,11 @@ async def insert_data(message: Message, state=FSMContext):
             cur.execute(query_add_sum_in_category, data_to_insert)
         else:
             cur.execute(query_add_sum_in_category_with_comment, data_to_insert_with_comment)
-        cura = curent_ammount(message)
+        cura = curent_amount(message)
         await message.answer(f'{added_sum} added to category {choosen_cat}\nBalance: {cura}', reply_markup=menu_kb)
-        query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
-        ammount_data = [cura, message.date, message.from_user.id]
-        cur.execute(query_add_ammount, ammount_data)
+        query_add_amount = """UPDATE amount SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
+        amount_data = [cura, message.date, message.from_user.id]
+        cur.execute(query_add_amount, amount_data)
         await state.reset_state(with_data=True)  # Reset state and data in storage
         conn.close()
 
@@ -915,15 +915,15 @@ async def choose_day3(message: Message, state: FSMContext):
         query_edit_budget = """DELETE FROM BUDGET WHERE ID=%s AND SUM=%s AND CATEGORY=%s AND IN_EX=%s AND DATE=%s"""
         parameters = [message.from_user.id, suma, cat, inex, data]
         db_connect()
-        cura = curent_ammount(message)
+        cura = curent_amount(message)
         cur.execute(query_edit_budget, parameters)
         if inex == 'income':
             suma = cura - suma
         else:
             suma = cura + suma
-        query_add_ammount = """UPDATE AMMOUNT SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
-        ammount_data = [suma, message.date, message.from_user.id]
-        cur.execute(query_add_ammount, ammount_data)
+        query_add_amount = """UPDATE amount SET SUM=(%s),DATE=(%s) WHERE ID = (%s)"""
+        amount_data = [suma, message.date, message.from_user.id]
+        cur.execute(query_add_amount, amount_data)
         conn.close()
         text = day_history(message, date.day, date.month, date.year)
         await message.answer(f'{sum} from {cat} deleted')

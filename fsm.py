@@ -8,9 +8,9 @@ class Inc_exp(StatesGroup):
     Inex4 = State()
 
 
-class Ammount(StatesGroup):
-    Ammount_cur = State()
-    Ammount_upg = State()
+class Amount(StatesGroup):
+    Amount_cur = State()
+    Amount_upg = State()
 
 
 class Editcater(StatesGroup):
